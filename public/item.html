@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A dark-themed Hacker News reader">
+  <title>Dark HN</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+  <center>
+    <table border="0" cellpadding="0" cellspacing="0" class="header-table">
+      <tbody>
+        <tr>
+          <td class="logo-cell">
+            <a class="logo-link" href="/">Y</a>
+          </td>
+          <td style="line-height:12pt; height:10px;">
+            <span class="pagetop">
+              <b class="hnname"><a href="/">Dark Hacker News</a></b>
+              <span id="nav">
+                <a href="/new">new</a> |
+                <a href="https://news.ycombinator.com/front">past</a> |
+                <a href="https://news.ycombinator.com/newcomments">comments</a> |
+                <a href="/ask">ask</a> |
+                <a href="/show">show</a> |
+                <a href="/jobs">jobs</a> |
+                <a href="https://news.ycombinator.com/submit">submit</a>
+              </span>
+            </span>
+          </td>
+          <td class="header-right">
+            <span class="pagetop">
+              <a id="light-link" href="https://news.ycombinator.com/">Light Hacker News</a>
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </center>
+  <div id="app"></div>
+  <hr>
+  <footer>
+    <span class="yclinks">
+      <a href="https://news.ycombinator.com/newsguidelines.html">Guidelines</a> |
+      <a href="https://news.ycombinator.com/newsfaq.html">FAQ</a> |
+      <a href="https://news.ycombinator.com/lists">Lists</a> |
+      <a href="https://github.com/HackerNews/API">API</a> |
+      <a href="https://news.ycombinator.com/security.html">Security</a> |
+      <a href="https://www.ycombinator.com/legal/">Legal</a> |
+      <a href="https://www.ycombinator.com/apply/">Apply to YC</a> |
+      <a href="mailto:hn@ycombinator.com">Contact</a>
+    </span>
+  </footer>
+</main>
+
+<script>
+  const API = 'https://hacker-news.firebaseio.com/v0';
+  const HN  = 'https://news.ycombinator.com';
+
+  function timeAgo(unix) {
+    const s = Math.floor(Date.now() / 1000) - unix;
+    if (s < 60)    return `${s}s ago`;
+    if (s < 3600)  return `${Math.floor(s / 60)}m ago`;
+    if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+    return `${Math.floor(s / 86400)}d ago`;
+  }
+
+  function getDomain(url) {
+    try { return new URL(url).hostname.replace(/^www\./, ''); }
+    catch { return null; }
+  }
+
+  function fetchItem(id) {
+    return fetch(`${API}/item/${id}.json`).then(r => r.json());
+  }
+
+  async function fetchCommentTree(id) {
+    const item = await fetchItem(id);
+    if (!item || item.type !== 'comment') return null;
+    if (item.kids && item.kids.length) {
+      item.children = (await Promise.all(item.kids.map(fetchCommentTree))).filter(Boolean);
+    } else {
+      item.children = [];
+    }
+    return item;
+  }
+
+  function commentHTML(c) {
+    if (!c) return '';
+    const isDeleted = c.deleted || c.dead;
+    const head = isDeleted
+      ? `<div class="comment-head"><span class="comment-author">[deleted]</span></div>`
+      : `<div class="comment-head">
+           <a class="comment-author" href="${HN}/user?id=${c.by}">${c.by}</a>
+           <a class="comment-time" href="${HN}/item?id=${c.id}">${timeAgo(c.time)}</a>
+           | <span class="comment-toggle" data-count="${(c.children || []).length}">[-]</span>
+         </div>`;
+
+    const body = isDeleted ? '' : `<div class="comment-body">${c.text ?? ''}</div>`;
+    const reply = isDeleted ? '' : `<p class="comment-reply"><a href="${HN}/reply?id=${c.id}">reply</a></p>`;
+    const children = c.children && c.children.length
+      ? `<div class="comment-children">${c.children.map(commentHTML).join('')}</div>`
+      : '';
+
+    return `<div class="comment" id="c${c.id}">${head}${body}${reply}${children}</div>`;
+  }
+
+  async function loadComments(id) {
+    try {
+      const story = await fetchItem(id);
+
+      const storyUrl  = story.url || '';
+      const host      = getDomain(storyUrl);
+      const titleLink = storyUrl
+        ? `<a href="${storyUrl}">${story.title}</a>`
+        : story.title;
+
+      const textBlock = story.text
+        ? `<div class="story-text">${story.text}</div>`
+        : '';
+
+      document.title = `${story.title} | Dark HN`;
+
+      const comments = story.descendants ?? 0;
+
+      document.getElementById('app').innerHTML = `
+        <div class="story-card">
+          <div class="story-card-title">${titleLink}${host ? ` <span class="domain">(${host})</span>` : ''}</div>
+          <div class="story-card-meta">
+            ${story.score ?? 0} points by <a href="${HN}/user?id=${story.by}">${story.by}</a>
+            <a href="${HN}/item?id=${story.id}">${timeAgo(story.time)}</a>
+            | ${comments} comment${comments !== 1 ? 's' : ''}
+          </div>
+          ${textBlock}
+        </div>
+        <div id="comments-tree">
+        </div>`;
+
+      const kids = story.kids ?? [];
+      const topLevel = (await Promise.all(kids.map(fetchCommentTree))).filter(Boolean);
+
+      document.getElementById('comments-tree').innerHTML =
+        topLevel.length
+          ? topLevel.map(commentHTML).join('')
+          : `<div class="state" style="padding: 40px 0; color: #444">No comments yet.</div>`;
+
+    } catch {
+      document.getElementById('app').innerHTML =
+        `<div class="state">
+          <span class="error-icon">⚠</span>
+          <span>Failed to load comments.</span>
+          <button class="retry-btn" onclick="loadComments('${id}')">Retry</button>
+        </div>`;
+    }
+  }
+
+  // Comment collapse (event delegation)
+  document.getElementById('app').addEventListener('click', e => {
+    const toggle = e.target.closest('.comment-toggle');
+    if (!toggle) return;
+    const comment = toggle.closest('.comment');
+    comment.classList.toggle('collapsed');
+    const count = toggle.dataset.count;
+    toggle.textContent = comment.classList.contains('collapsed')
+      ? `[+${count ? count + ' more' : ''}]`
+      : '[-]';
+  });
+
+  const id = new URLSearchParams(window.location.search).get('id');
+  if (id) {
+    document.getElementById('light-link').href = `${HN}/item?id=${id}`;
+    loadComments(id);
+  } else {
+    document.getElementById('app').innerHTML =
+      '<div class="state"><span class="error-icon">⚠</span><span>No item ID provided.</span></div>';
+  }
+</script>
+
+</body>
+</html>

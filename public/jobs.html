@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A dark-themed Hacker News reader">
+  <title>Jobs | Dark HN</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+  <center>
+    <table border="0" cellpadding="0" cellspacing="0" class="header-table">
+      <tbody>
+        <tr>
+          <td class="logo-cell">
+            <a class="logo-link" href="/">Y</a>
+          </td>
+          <td style="line-height:12pt; height:10px;">
+            <span class="pagetop">
+              <b class="hnname"><a href="/">Dark Hacker News</a></b>
+              <span id="nav">
+                <a href="/new">new</a> |
+                <a href="https://news.ycombinator.com/front">past</a> |
+                <a href="https://news.ycombinator.com/newcomments">comments</a> |
+                <a href="/ask">ask</a> |
+                <a href="/show">show</a> |
+                <a href="/jobs" class="active">jobs</a> |
+                <a href="https://news.ycombinator.com/submit">submit</a>
+              </span>
+            </span>
+          </td>
+          <td class="header-right">
+            <span class="pagetop">
+              <a href="https://news.ycombinator.com/jobs">Light Hacker News</a>
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </center>
+  <div id="app"></div>
+  <hr>
+  <footer>
+    <span class="yclinks">
+      <a href="https://news.ycombinator.com/newsguidelines.html">Guidelines</a> |
+      <a href="https://news.ycombinator.com/newsfaq.html">FAQ</a> |
+      <a href="https://news.ycombinator.com/lists">Lists</a> |
+      <a href="https://github.com/HackerNews/API">API</a> |
+      <a href="https://news.ycombinator.com/security.html">Security</a> |
+      <a href="https://www.ycombinator.com/legal/">Legal</a> |
+      <a href="https://www.ycombinator.com/apply/">Apply to YC</a> |
+      <a href="mailto:hn@ycombinator.com">Contact</a>
+    </span>
+  </footer>
+</main>
+
+<script>
+  const API   = 'https://hacker-news.firebaseio.com/v0';
+  const HN    = 'https://news.ycombinator.com';
+  const PER_PAGE = 30;
+
+  let allIds = [];
+  let page = 0;
+
+  function timeAgo(unix) {
+    const s = Math.floor(Date.now() / 1000) - unix;
+    if (s < 60)    return `${s}s ago`;
+    if (s < 3600)  return `${Math.floor(s / 60)}m ago`;
+    if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+    return `${Math.floor(s / 86400)}d ago`;
+  }
+
+  function getDomain(url) {
+    try { return new URL(url).hostname.replace(/^www\./, ''); }
+    catch { return null; }
+  }
+
+  function fetchItem(id) {
+    return fetch(`${API}/item/${id}.json`).then(r => r.json());
+  }
+
+  function storyHTML(s, rank) {
+    if (!s || s.dead || s.deleted) return '';
+    const url      = s.url || `/item?id=${s.id}`;
+    const host     = getDomain(s.url);
+    const comments = s.descendants ?? 0;
+    return `
+      <li class="story">
+        <span class="rank">${rank}.</span>
+        <div class="story-body">
+          <div class="story-title-row">
+            <a class="story-link" href="${url}">${s.title}</a>
+            ${host ? `<span class="domain">(${host})</span>` : ''}
+          </div>
+          <div class="story-meta">
+            <span class="score">${s.score ?? 0} pts</span>
+            <span>by <a href="${HN}/user?id=${s.by}">${s.by}</a></span>
+            <span>${timeAgo(s.time)}</span>
+            <a href="/item?id=${s.id}">${comments} comment${comments !== 1 ? 's' : ''}</a>
+          </div>
+        </div>
+      </li>`;
+  }
+
+  function moreHTML() {
+    const start = (page + 1) * PER_PAGE;
+    if (start >= allIds.length) return '';
+    return `<div class="morespace"><a class="morelink" href="javascript:void(0)" onclick="loadMore()">More</a></div>`;
+  }
+
+  async function loadFeed() {
+    try {
+      allIds = await fetch(`${API}/jobstories.json`).then(r => r.json());
+      page = 0;
+      const items = await Promise.all(allIds.slice(0, PER_PAGE).map(fetchItem));
+      const rows  = items.map((s, i) => storyHTML(s, i + 1)).filter(Boolean).join('');
+      document.getElementById('app').innerHTML = `<ol class="stories">${rows}</ol>${moreHTML()}`;
+    } catch {
+      document.getElementById('app').innerHTML =
+        `<div class="state">
+          <span class="error-icon">⚠</span>
+          <span>Failed to load stories.</span>
+          <button class="retry-btn" onclick="loadFeed()">Retry</button>
+        </div>`;
+    }
+  }
+
+  async function loadMore() {
+    page++;
+    const start = page * PER_PAGE;
+    const pageIds = allIds.slice(start, start + PER_PAGE);
+    if (!pageIds.length) return;
+    const items = await Promise.all(pageIds.map(fetchItem));
+    const rows  = items.map((s, i) => storyHTML(s, start + i + 1)).filter(Boolean).join('');
+    document.getElementById('app').innerHTML = `<ol class="stories">${rows}</ol>${moreHTML()}`;
+    window.scrollTo(0, 0);
+  }
+
+  loadFeed();
+</script>
+
+</body>
+</html>
