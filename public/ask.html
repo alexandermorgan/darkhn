@@ -89,10 +89,10 @@
       <li class="story">
         <span class="rank">${rank}.</span>
         <div class="story-body">
-          <div class="story-title-row">
+          <p class="story-title-row">
             <a class="story-link" href="${url}">${s.title}</a>
             ${host ? `<span class="domain">(${host})</span>` : ''}
-          </div>
+          </p>
           <div class="story-meta">
             <span class="score">${s.score ?? 0} pts</span>
             <span>by <a href="${HN}/user?id=${s.by}">${s.by}</a></span>
