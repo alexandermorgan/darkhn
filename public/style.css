@@ -308,6 +308,7 @@ footer {
   body { margin: 0; }
   center { height: 54px; }
   .pagetop { flex-direction: column; }
+  main { width: unset; }
 }
 
 @media (max-width: 400px) {
@@ -315,4 +316,5 @@ footer {
   center { height: 54px; }
   .pagetop { flex-direction: column; }
   .pagetop a { width: min-content; }
+  main { width: unset; }
 }
