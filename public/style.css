@@ -60,7 +60,11 @@ center {
 }
 
 .pagetop a.active {
-  color: #dedede;
+  color: #ddd;
+}
+
+.lhn {
+  flex-direction: row-reverse;
 }
 
 #nav {
@@ -78,7 +82,7 @@ center {
 .header-right {
   text-align: right;
   padding-right: 4px;
-  color: #dedede;
+  color: #ddd;
   font-weight: bold;
 }
 
@@ -114,14 +118,12 @@ main {
 .story-body { flex: 1; min-width: 0; }
 
 .story-link {
-  color: #dedede;
+  color: #ddd;
   font-size: 14px;
   font-weight: 500;
   line-height: 1.45;
   transition: color 0.15s;
 }
-
-.story-link:hover { color: #ff6600; }
 
 .domain { color: #555; font-size: 12px; white-space: nowrap; }
 
@@ -142,11 +144,9 @@ main {
 
 .story-card-title {
   font-size: 13px;
-  color: #dedede;
+  color: #ddd;
   line-height: 1.4;
 }
-
-.story-card-title a:hover { color: #ff6600; }
 
 .story-card-meta {
   margin-top: 2px;
@@ -193,7 +193,7 @@ main {
   flex-shrink: 0;
 }
 
-.comment-toggle:hover { color: #dedede; }
+.comment-toggle:hover { color: #ddd; }
 
 .comment-author { color: #c9c9c9; }
 .comment-author:hover { text-decoration: underline; }
@@ -228,7 +228,7 @@ main {
   font-size: 9pt;
 }
 .comment-reply a { color: #888; text-decoration: underline; }
-.comment-reply a:hover { color: #dedede; }
+.comment-reply a:hover { color: #ddd; }
 
 .comment-children {
   margin-left: 40px;
@@ -261,14 +261,12 @@ main {
   transition: border-color 0.15s, color 0.15s;
 }
 
-.retry-btn:hover { border-color: #ff6600; color: #ff6600; }
-
 .morespace {
   padding: 10px 0 10px 40px;
 }
 
 .morelink {
-  color: #dedede;
+  color: #ddd;
   font-size: 10pt;
 }
 
@@ -305,7 +303,6 @@ footer {
 }
 
 .footer-source a { color: #3a3a3a; }
-.footer-source a:hover { color: #ff6600; }
 
 @media (min-width: 400px) and (max-width: 750px) {
   body { margin: 0; }

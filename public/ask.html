@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="A dark-themed Hacker News reader">
+  <meta name="description" content="A dark-themed Hacker News read-only site. Hackers have to sleep too!">
   <title>Ask | Dark HN</title>
   <link rel="stylesheet" href="/style.css">
 </head>
@@ -31,7 +31,7 @@
             </span>
           </td>
           <td class="header-right">
-            <span class="pagetop">
+            <span class="pagetop lhn">
               <a href="https://news.ycombinator.com/ask">Light Hacker News</a>
             </span>
           </td>
@@ -91,7 +91,7 @@
         <div class="story-body">
           <p class="story-title-row">
             <a class="story-link" href="${url}">${s.title}</a>
-            ${host ? `<span class="domain">(${host})</span>` : ''}
+            ${host ? `<span class="domain">(<a href="${HN}/from?site=${host}">${host}</a>)</span>` : ''}
           </p>
           <div class="story-meta">
             <span class="score">${s.score ?? 0} pts</span>

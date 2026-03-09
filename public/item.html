@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="A dark-themed Hacker News reader">
+  <meta name="description" content="A dark-themed Hacker News read-only site. Hackers have to sleep too!">
   <title>Dark HN</title>
   <link rel="stylesheet" href="/style.css">
 </head>
@@ -31,7 +31,7 @@
             </span>
           </td>
           <td class="header-right">
-            <span class="pagetop">
+            <span class="pagetop lhn">
               <a id="light-link" href="https://news.ycombinator.com/">Light Hacker News</a>
             </span>
           </td>
@@ -127,7 +127,7 @@
 
       document.getElementById('app').innerHTML = `
         <div class="story-card">
-          <div class="story-card-title">${titleLink}${host ? ` <span class="domain">(${host})</span>` : ''}</div>
+          <div class="story-card-title">${titleLink}${host ? ` <span class="domain">(<a href="${HN}/from?site=${host}">${host}</a>)</span>` : ''}</div>
           <div class="story-card-meta">
             ${story.score ?? 0} points by <a href="${HN}/user?id=${story.by}">${story.by}</a>
             <a href="${HN}/item?id=${story.id}">${timeAgo(story.time)}</a>
