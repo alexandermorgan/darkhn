@@ -12,6 +12,11 @@ body {
   margin: 8px;
 }
 
+#app {
+  width: 100%;
+  width: -webkit-fill-available;
+}
+
 a { color: inherit; text-decoration: none; }
 
 center {
@@ -170,7 +175,7 @@ main {
 .story-text p:first-child { margin-top: 0; }
 
 #comments-tree {
-  padding-left: 20px;
+  padding: 0 20px;
 }
 
 .comment {
